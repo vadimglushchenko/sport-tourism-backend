@@ -1,0 +1,12 @@
+spring:
+  cloud:
+    function:
+      scan:
+        packages: com.sporttourism.functions
+amazon:
+  dynamodb:
+    endpoint: dynamodb.eu-central-1.amazonaws.com
+    region: eu-central-1
+  aws:
+    accesskey: AKIAVJ2IDNK6SJYBDF4T
+    secretkey: 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
