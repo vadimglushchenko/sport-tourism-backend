@@ -50,7 +50,7 @@ public class SportTripService {
     return sportTrip;
   }
 
-  public Optional<Iterable<SportTrip>> getSportTripsByTripDifficultyAndTripDuration(TripDifficulty tripDifficulty, Integer tripDuration) {
+  public Optional<Iterable<SportTrip>> getSportTripsByTripDifficultyAndTripDuration(String tripDifficulty, Integer tripDuration) {
     Optional<Iterable<SportTrip>> sportTrips = Optional.of(new ArrayList<>());
 
     LOGGER.trace("getSportTripsByTripDifficultyAndTripDuration: tripDifficulty " + tripDifficulty + " tripDuration " + tripDuration);

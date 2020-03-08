@@ -6,6 +6,7 @@ import com.google.gson.Gson;
 import com.sporttourism.entities.SportTrip;
 import com.sporttourism.payload.SportTripInput;
 import com.sporttourism.service.SportTripService;
+import java.util.Map;
 import java.util.Optional;
 import java.util.function.Function;
 import lombok.AccessLevel;
@@ -25,7 +26,6 @@ public class AddSportTrip implements Function<APIGatewayProxyRequestEvent, APIGa
   Gson gson;
 
   static final Logger LOGGER = LoggerFactory.getLogger(SportTripService.class);
-
 
   @Override
   public APIGatewayProxyResponseEvent apply(APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent) {
@@ -47,6 +47,8 @@ public class AddSportTrip implements Function<APIGatewayProxyRequestEvent, APIGa
     }
 
     APIGatewayProxyResponseEvent responseEvent = new APIGatewayProxyResponseEvent();
+    responseEvent.setHeaders(Map.of("Access-Control-Allow-Origin", "*",
+        "Access-Control-Allow-Credentials", "true"));
     responseEvent.setStatusCode(HttpStatus.OK.value());
     responseEvent.setBody(responseBody);
     return responseEvent;
