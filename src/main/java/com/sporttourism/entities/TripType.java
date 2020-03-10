@@ -5,5 +5,6 @@ public enum TripType {
   BIKE_TRIP,
   MOUNTAIN_HIKE,
   WATER_HIKE,
-  CAVING
+  CAVING,
+  SKI_TRIP
 }

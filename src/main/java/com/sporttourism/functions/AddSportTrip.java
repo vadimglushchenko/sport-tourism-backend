@@ -34,9 +34,10 @@ public class AddSportTrip implements Function<APIGatewayProxyRequestEvent, APIGa
     String responseBody = "Incorrect sport trip input";
 
     try {
-      sportTripInput = gson.fromJson(apiGatewayProxyRequestEvent.getBody(), SportTripInput.class);
-      LOGGER.info("SportTripInput: " + sportTripInput.toString());
+      LOGGER.info("AddSportTrip function: Request body: " + apiGatewayProxyRequestEvent.getBody());
 
+      sportTripInput = gson.fromJson(apiGatewayProxyRequestEvent.getBody(), SportTripInput.class);
+      LOGGER.info("AddSportTrip function: Parsed sport trip input: " + sportTripInput.toString());
       Optional<SportTrip> addedSportTrip = sportTripService.addSportTrip(sportTripInput);
 
       if (addedSportTrip.isPresent()) {
@@ -48,7 +49,9 @@ public class AddSportTrip implements Function<APIGatewayProxyRequestEvent, APIGa
 
     APIGatewayProxyResponseEvent responseEvent = new APIGatewayProxyResponseEvent();
     responseEvent.setHeaders(Map.of("Access-Control-Allow-Origin", "*",
-        "Access-Control-Allow-Credentials", "true"));
+        "Access-Control-Allow-Credentials", "true", "Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT",
+        "Access-Control-Allow-Headers",
+        "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers"));
     responseEvent.setStatusCode(HttpStatus.OK.value());
     responseEvent.setBody(responseBody);
     return responseEvent;

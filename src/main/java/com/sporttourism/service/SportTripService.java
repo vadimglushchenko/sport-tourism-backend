@@ -5,6 +5,7 @@ import com.sporttourism.entities.TripDifficulty;
 import com.sporttourism.payload.SportTripInput;
 import com.sporttourism.repositories.SportTripRepository;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.AccessLevel;
@@ -75,13 +76,15 @@ public class SportTripService {
 
     SportTrip createdSportTrip = SportTrip.builder()
         .locationName(sportTripInput.getLocationName())
+        .tripDescription(sportTripInput.getTripDescription())
         .tripDate(sportTripInput.getTripDate())
         .tripDifficulty(sportTripInput.getTripDifficulty().toString())
         .tripType(sportTripInput.getTripType().toString())
         .tripDuration(sportTripInput.getTripDuration())
         .maxGroupCount(sportTripInput.getMaxGroupCount())
         .cost(sportTripInput.getCost())
-//        .comments(sportTripInput.getComments())
+        .comments(new HashSet<>())
+        .participants(sportTripInput.getParticipants())
         .isFinished(sportTripInput.getIsFinished())
         .isRemoved(sportTripInput.getIsRemoved())
         .build();

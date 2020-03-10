@@ -28,15 +28,29 @@ public class GetAllSportTrips implements Function<APIGatewayProxyRequestEvent, A
 
   @Override
   public APIGatewayProxyResponseEvent apply(APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent) {
-    Optional<Iterable<SportTrip>> allSportTrips = sportTripService.getAllSportTrips();
-    allSportTrips.ifPresent(sportTrips -> LOGGER.info("Sport trips from service: " + sportTrips.toString()));
-
     APIGatewayProxyResponseEvent responseEvent = new APIGatewayProxyResponseEvent();
+
+    Optional<Map<String, String>> pathParameters = Optional.ofNullable(apiGatewayProxyRequestEvent.getQueryStringParameters());
+    pathParameters.ifPresentOrElse(parameters -> {
+      Optional<String> sportTripId = Optional.ofNullable(parameters.get("id"));
+
+      sportTripId.ifPresent(tripId -> {
+        LOGGER.info("GetAllSportTrips function: pathParameter sport_trip_id: " + sportTripId);
+
+        Optional<SportTrip> sportTrip = sportTripService.getSportTripById(tripId);
+
+        sportTrip.ifPresent(newSportTrip -> responseEvent.setBody(gson.toJson(sportTrip)));
+      });
+    }, () -> {
+      Optional<Iterable<SportTrip>> allSportTrips = sportTripService.getAllSportTrips();
+      allSportTrips.ifPresent(sportTrips -> LOGGER.info("GetAllSportTrips function: Sport trips from service: " + gson.toJson(sportTrips)));
+      allSportTrips
+          .ifPresent(sportTrips -> responseEvent.setBody(gson.toJson(sportTrips)));
+    });
+
     responseEvent.setHeaders(Map.of("Access-Control-Allow-Origin", "*",
         "Access-Control-Allow-Credentials", "true"));
     responseEvent.setStatusCode(HttpStatus.OK.value());
-    allSportTrips
-        .ifPresent(sportTrips -> responseEvent.setBody(gson.toJson(sportTrips)));
 
     return responseEvent;
   }

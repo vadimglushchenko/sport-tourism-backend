@@ -1,19 +1,21 @@
 package com.sporttourism;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import com.amazonaws.services.dynamodbv2.AmazonDynamoDB;
 import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
+import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
 import com.sporttourism.entities.SportTrip;
-import com.sporttourism.entities.TripDifficulty;
-import com.sporttourism.entities.TripType;
+import com.sporttourism.payload.SportTripInput;
 import com.sporttourism.repositories.SportTripRepository;
-import java.util.Date;
-import java.util.List;
+import com.sporttourism.service.SportTripService;
+import java.util.Optional;
+import org.jeasy.random.EasyRandom;
+import org.junit.After;
 import org.junit.Before;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -30,19 +32,26 @@ import org.springframework.test.context.web.WebAppConfiguration;
 @TestPropertySource(properties = {
     "amazon.dynamodb.endpoint=http://localhost:8000/",
     "amazon.aws.accesskey=test1",
-    "amazon.aws.secretkey=test231" })
-public class SportTripRepositoryTest {
+    "amazon.aws.secretkey=test231"})
+public class SportTripTest {
 
   private DynamoDBMapper dynamoDBMapper;
 
   @Autowired
   private AmazonDynamoDB amazonDynamoDB;
 
+  private EasyRandom generator;
+
   @Autowired
   SportTripRepository repository;
 
+  @Autowired
+  SportTripService sportTripService;
+
   @Before
   public void setup() {
+    generator = new EasyRandom();
+
     dynamoDBMapper = new DynamoDBMapper(amazonDynamoDB);
 
     CreateTableRequest tableRequest = dynamoDBMapper
@@ -54,28 +63,22 @@ public class SportTripRepositoryTest {
     dynamoDBMapper.batchDelete(repository.findAll());
   }
 
-  @Ignore
+  @After
+  public void cleanDatabase() {
+    dynamoDBMapper = new DynamoDBMapper(amazonDynamoDB);
+
+    DeleteTableRequest deleteTableRequest = dynamoDBMapper
+        .generateDeleteTableRequest(SportTrip.class);
+    amazonDynamoDB.deleteTable(deleteTableRequest);
+  }
+
   @Test
   public void addSportTrip() {
-    SportTrip sportTrip = SportTrip.builder()
-        .id("1")
-        .cost(1000.)
-        .locationName("Krim")
-        .maxGroupCount(12)
-        .tripDate("15 May, 2020")
-        .tripDifficulty(TripDifficulty.TWO.toString())
-        .tripDuration(15)
-        .tripType(TripType.HIKING.toString())
-        .isFinished(false)
-        .isRemoved(false)
-        .build();
-    repository.save(sportTrip);
+    SportTripInput sportTrip = generator.nextObject(SportTripInput.class);
 
-    List<SportTrip> result
-        = (List<SportTrip>) repository.findAll();
+    Optional<SportTrip> addedSportTrip = sportTripService.addSportTrip(sportTrip);
 
-    assertTrue("Not empty", result.size() > 0);
-//    assertTrue("Contains item with expected cost",
-//        result.get(0).getCost().equals(EXPECTED_COST));
+    assertTrue(addedSportTrip.isPresent());
+    assertEquals(sportTrip.getLocationName(), addedSportTrip.get().getLocationName());
   }
 }

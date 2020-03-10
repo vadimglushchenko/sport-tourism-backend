@@ -2,6 +2,8 @@ package com.sporttourism.payload;
 
 import com.sporttourism.entities.TripDifficulty;
 import com.sporttourism.entities.TripType;
+import com.sporttourism.entities.User;
+import java.util.Set;
 import javax.validation.constraints.NotNull;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
@@ -19,7 +21,9 @@ public class SportTripInput {
 
   @NotNull
   String locationName;
-  String description;
+
+  String tripDescription;
+
   @NotNull
   String tripDate;
 
@@ -28,15 +32,17 @@ public class SportTripInput {
 
   @NotNull
   TripType tripType;
+
   @NotNull
   Integer tripDuration;
 
   Integer maxGroupCount;
+
   Double cost;
 
-//  @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY, mappedBy = "sportTrip")
-//  private Set<Comment> comments;
+  Set<User> participants;
 
   Boolean isFinished;
+
   Boolean isRemoved;
 }
