@@ -12,6 +12,7 @@ import com.sporttourism.entities.SportTrip;
 import com.sporttourism.payload.SportTripInput;
 import com.sporttourism.repositories.SportTripRepository;
 import com.sporttourism.service.SportTripService;
+import java.util.Collection;
 import java.util.Optional;
 import org.jeasy.random.EasyRandom;
 import org.junit.After;
@@ -81,4 +82,17 @@ public class SportTripTest {
     assertTrue(addedSportTrip.isPresent());
     assertEquals(sportTrip.getLocationName(), addedSportTrip.get().getLocationName());
   }
+
+  @Test
+  public void getActiveSportTrips() {
+    sportTripService.addSportTrip(generator.nextObject(SportTripInput.class));
+    sportTripService.addSportTrip(generator.nextObject(SportTripInput.class));
+    sportTripService.addSportTrip(generator.nextObject(SportTripInput.class));
+
+    Optional<Iterable<SportTrip>> sportTripsByStatus = sportTripService.getSportTripsByIsCompleted(Boolean.FALSE);
+
+    assertTrue(sportTripsByStatus.isPresent());
+    assertEquals(((Collection<SportTrip>) sportTripsByStatus.get()).size(), 3);
+  }
+
 }

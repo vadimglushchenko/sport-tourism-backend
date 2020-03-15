@@ -19,7 +19,7 @@ import org.springframework.stereotype.Component;
 @Component
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class GetAllSportTrips implements Function<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class GetSportTrips implements Function<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
   SportTripService sportTripService;
   Gson gson;
@@ -35,16 +35,27 @@ public class GetAllSportTrips implements Function<APIGatewayProxyRequestEvent, A
       Optional<String> sportTripId = Optional.ofNullable(parameters.get("id"));
 
       sportTripId.ifPresent(tripId -> {
-        LOGGER.info("GetAllSportTrips function: pathParameter sport_trip_id: " + sportTripId);
+        LOGGER.info("GetActiveSportTrips function: pathParameter id: " + tripId);
 
         Optional<SportTrip> sportTrip = sportTripService.getSportTripById(tripId);
-
         sportTrip.ifPresent(newSportTrip -> responseEvent.setBody(gson.toJson(sportTrip)));
       });
+
+      Optional<String> isSportTripCompleted = Optional.ofNullable(parameters.get("isCompleted"));
+
+      isSportTripCompleted.ifPresent(isCompleted -> {
+        LOGGER.info("GetActiveSportTrips function: pathParameter isCompleted: " + isCompleted);
+
+        Optional<Iterable<SportTrip>> sportTripsFromService = sportTripService.getSportTripsByIsCompleted(Boolean.valueOf(isCompleted));
+        sportTripsFromService.ifPresent(sportTrips -> {
+          LOGGER.info("GetActiveSportTrips function: Sport trips from service: " + gson.toJson(sportTrips));
+          responseEvent.setBody(gson.toJson(sportTrips));
+        });
+      });
     }, () -> {
-      Optional<Iterable<SportTrip>> allSportTrips = sportTripService.getAllSportTrips();
-      allSportTrips.ifPresent(sportTrips -> LOGGER.info("GetAllSportTrips function: Sport trips from service: " + gson.toJson(sportTrips)));
-      allSportTrips
+      Optional<Iterable<SportTrip>> activeSportTrips = sportTripService.getSportTripsByIsCompleted(Boolean.FALSE);
+      activeSportTrips.ifPresent(sportTrips -> LOGGER.info("GetActiveSportTrips function: Sport trips from service: " + gson.toJson(sportTrips)));
+      activeSportTrips
           .ifPresent(sportTrips -> responseEvent.setBody(gson.toJson(sportTrips)));
     });
 

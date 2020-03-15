@@ -25,7 +25,7 @@ public class Comment {
   String commentText;
 
   @DynamoDBAttribute
-  User author;
+  String authorUsername;
 
   @DynamoDBAttribute
   Long date;

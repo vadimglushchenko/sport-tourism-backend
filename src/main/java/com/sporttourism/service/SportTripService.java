@@ -1,11 +1,9 @@
 package com.sporttourism.service;
 
 import com.sporttourism.entities.SportTrip;
-import com.sporttourism.entities.TripDifficulty;
 import com.sporttourism.payload.SportTripInput;
 import com.sporttourism.repositories.SportTripRepository;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import lombok.AccessLevel;
@@ -24,57 +22,42 @@ public class SportTripService {
 
   SportTripRepository sportTripRepository;
 
-  public Optional<Iterable<SportTrip>> getAllSportTrips() {
+  public Optional<Iterable<SportTrip>> getSportTripsByIsCompleted(Boolean isCompleted) {
     Optional<Iterable<SportTrip>> sportTrips = Optional.of(new ArrayList<>());
     try {
-      sportTrips = (Optional.of(sportTripRepository.findAll()));
+      sportTrips = sportTripRepository.findByIsCompleted(isCompleted);
     } catch (Exception e) {
-      LOGGER.error("getAllSportTrips: List of sport trips is empty!");
+      LOGGER.error("SportTripService#getActiveSportTrips: List of sport trips is empty!");
+      e.printStackTrace();
     }
 
-    LOGGER.debug("getAllSportTrips output: " + sportTrips.toString());
+    LOGGER.debug("SportTripService#getActiveSportTrips output: " + sportTrips.toString());
     return sportTrips;
   }
 
   public Optional<SportTrip> getSportTripById(String sportTripId) {
     Optional<SportTrip> sportTrip = Optional.empty();
-    LOGGER.trace("getSportTripById: " + sportTripId);
+    LOGGER.trace("SportTripService#getSportTripById: id " + sportTripId);
 
     try {
       sportTrip = sportTripRepository.findById(sportTripId);
     } catch (Exception e) {
-      LOGGER.error("getSportTripById: SportTrip with " + sportTripId + " don't exist!");
+      LOGGER.error("SportTripService#getSportTripById: SportTrip with " + sportTripId + " don't exist!");
+      e.printStackTrace();
     }
 
-    LOGGER.debug("getSportTripById output: " + sportTrip.toString());
+    LOGGER.debug("SportTripService#getSportTripById output: " + sportTrip.toString());
 
     return sportTrip;
-  }
-
-  public Optional<Iterable<SportTrip>> getSportTripsByTripDifficultyAndTripDuration(String tripDifficulty, Integer tripDuration) {
-    Optional<Iterable<SportTrip>> sportTrips = Optional.of(new ArrayList<>());
-
-    LOGGER.trace("getSportTripsByTripDifficultyAndTripDuration: tripDifficulty " + tripDifficulty + " tripDuration " + tripDuration);
-
-    try {
-      sportTrips = sportTripRepository.findByTripDifficultyAndTripDuration(tripDifficulty, tripDuration);
-    } catch (Exception e) {
-      LOGGER.error(
-          "getSportTripsByTripDifficultyAndTripDuration: SportTrips with tripDifficulty " + tripDifficulty + " and tripDuration " + tripDuration
-              + " don't exist!");
-    }
-
-    LOGGER.debug("getSportTripsByTripDifficultyAndTripDuration output: " + sportTrips.toString());
-
-    return sportTrips;
   }
 
   public Optional<SportTrip> addSportTrip(SportTripInput sportTripInput) {
     Optional<SportTrip> adderSportTrip = Optional.empty();
 
-    LOGGER.trace("addSportTrip: sportTripInput " + sportTripInput.toString());
+    LOGGER.trace("SportTripService#addSportTrip: sportTripInput " + sportTripInput.toString());
 
     SportTrip createdSportTrip = SportTrip.builder()
+        .tripGuideId(sportTripInput.getTripGuideId())
         .locationName(sportTripInput.getLocationName())
         .tripDescription(sportTripInput.getTripDescription())
         .tripDate(sportTripInput.getTripDate())
@@ -83,52 +66,40 @@ public class SportTripService {
         .tripDuration(sportTripInput.getTripDuration())
         .maxGroupCount(sportTripInput.getMaxGroupCount())
         .cost(sportTripInput.getCost())
-        .comments(new HashSet<>())
-        .participants(sportTripInput.getParticipants())
-        .isFinished(sportTripInput.getIsFinished())
-        .isRemoved(sportTripInput.getIsRemoved())
+        .isCompleted(Boolean.FALSE)
         .build();
 
     try {
       adderSportTrip = Optional.of(sportTripRepository.save(createdSportTrip));
     } catch (Exception e) {
-      LOGGER.error(
-          "addSportTrip: not valid sport trip input!");
+      LOGGER.error("SportTripService#addSportTrip: not valid sport trip input!");
+      e.printStackTrace();
     }
 
-    LOGGER.debug("addSportTrip output: " + adderSportTrip.toString());
+    LOGGER.debug("SportTripService#addSportTrip output: " + adderSportTrip.toString());
 
     return adderSportTrip;
   }
 
-  public Optional<SportTrip> deactivateSportTrip(String sportTripId) {
-    LOGGER.trace("deactivateSportTrip: " + sportTripId);
+  public Optional<SportTrip> completeSportTrip(String sportTripId) {
+    LOGGER.trace("SportTripService#completeSportTrip: id=" + sportTripId);
 
-    AtomicReference<SportTrip> deactivatedSportTrip = new AtomicReference<>();
+    AtomicReference<SportTrip> completedSportTrip = new AtomicReference<>();
 
     try {
       sportTripRepository.findById(sportTripId)
           .map(sportTrip -> {
-            sportTrip.setIsRemoved(true);
-            deactivatedSportTrip.set(sportTripRepository.save(sportTrip));
-            return deactivatedSportTrip.get();
+            sportTrip.setIsCompleted(true);
+            completedSportTrip.set(sportTripRepository.save(sportTrip));
+            return completedSportTrip.get();
           }).orElseThrow(NullPointerException::new);
     } catch (Exception e) {
-      LOGGER.error("deactivatedSportTrip: SportTrip with " + sportTripId + " don't exist!");
+      LOGGER.error("SportTripService#completeSportTrip: SportTrip with " + sportTripId + " don't exist!");
+      e.printStackTrace();
     }
 
-    LOGGER.debug("deactivatedSportTrip output: " + deactivatedSportTrip.get().toString());
+    LOGGER.debug("SportTripService#completeSportTrip: output: " + completedSportTrip.get().toString());
 
-    return Optional.of(deactivatedSportTrip.get());
-  }
-
-  public void deleteSportTrip(String sportTripId) {
-    LOGGER.trace("deleteSportTrip: " + sportTripId);
-
-    try {
-      sportTripRepository.deleteById(sportTripId);
-    } catch (Exception e) {
-      LOGGER.error("deleteSportTrip: SportTrip with " + sportTripId + " don't exist!");
-    }
+    return Optional.of(completedSportTrip.get());
   }
 }

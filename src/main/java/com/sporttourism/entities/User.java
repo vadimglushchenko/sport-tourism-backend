@@ -30,18 +30,12 @@ public class User {
   String userName;
 
   @DynamoDBAttribute
-  @NonNull
   @Size(max = 20)
   String phone;
 
   @DynamoDBAttribute
-  @NonNull
   @Size(max = 40)
   @Email
   String email;
 
-  @DynamoDBAttribute
-  @NonNull
-  @Size(max = 100)
-  String password;
 }
