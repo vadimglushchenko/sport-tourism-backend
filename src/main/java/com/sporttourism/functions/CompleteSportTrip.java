@@ -29,7 +29,7 @@ public class CompleteSportTrip implements Function<APIGatewayProxyRequestEvent, 
   @Override
   public APIGatewayProxyResponseEvent apply(APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent) {
 
-    String responseBody = "Incorrect sport trip id";
+    APIGatewayProxyResponseEvent responseEvent = new APIGatewayProxyResponseEvent();
 
     try {
       LOGGER.info("CompleteSportTrip function: Request body: " + apiGatewayProxyRequestEvent.getBody());
@@ -38,20 +38,18 @@ public class CompleteSportTrip implements Function<APIGatewayProxyRequestEvent, 
       LOGGER.info("CompleteSportTrip function: Parsed sport trip id: " + sportTripId);
       Optional<SportTrip> completedSportTrip = sportTripService.completeSportTrip(sportTripId);
 
-      if (completedSportTrip.isPresent()) {
-        responseBody = gson.toJson(completedSportTrip.get());
-      }
-    } catch (NullPointerException e) {
+      completedSportTrip.ifPresentOrElse(
+          sportTrip -> responseEvent.setBody(gson.toJson(sportTrip)),
+          () -> responseEvent.setBody("CompleteSportTrip function: sport trip with current id doesn't exist!"));
+    } catch (Exception e) {
       e.printStackTrace();
     }
 
-    APIGatewayProxyResponseEvent responseEvent = new APIGatewayProxyResponseEvent();
     responseEvent.setHeaders(Map.of("Access-Control-Allow-Origin", "*",
         "Access-Control-Allow-Credentials", "true", "Access-Control-Allow-Methods", "GET,HEAD,OPTIONS,POST,PUT",
         "Access-Control-Allow-Headers",
         "Access-Control-Allow-Headers, Origin,Accept, X-Requested-With, Content-Type, Access-Control-Request-Method, Access-Control-Request-Headers"));
     responseEvent.setStatusCode(HttpStatus.OK.value());
-    responseEvent.setBody(responseBody);
     return responseEvent;
   }
 }

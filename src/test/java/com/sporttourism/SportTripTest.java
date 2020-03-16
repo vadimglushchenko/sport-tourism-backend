@@ -8,6 +8,9 @@ import com.amazonaws.services.dynamodbv2.datamodeling.DynamoDBMapper;
 import com.amazonaws.services.dynamodbv2.model.CreateTableRequest;
 import com.amazonaws.services.dynamodbv2.model.DeleteTableRequest;
 import com.amazonaws.services.dynamodbv2.model.ProvisionedThroughput;
+import com.google.common.collect.Lists;
+import com.google.gson.Gson;
+import com.sporttourism.entities.Comment;
 import com.sporttourism.entities.SportTrip;
 import com.sporttourism.payload.SportTripInput;
 import com.sporttourism.repositories.SportTripRepository;
@@ -49,6 +52,9 @@ public class SportTripTest {
   @Autowired
   SportTripService sportTripService;
 
+  @Autowired
+  Gson gson;
+
   @Before
   public void setup() {
     generator = new EasyRandom();
@@ -81,6 +87,21 @@ public class SportTripTest {
 
     assertTrue(addedSportTrip.isPresent());
     assertEquals(sportTrip.getLocationName(), addedSportTrip.get().getLocationName());
+  }
+
+  @Test
+  public void addCommentToSportTrip() {
+    SportTrip sportTrip = sportTripService.addSportTrip(generator.nextObject(SportTripInput.class)).get();
+
+    Comment comment = generator.nextObject(Comment.class);
+    Comment commentSecond = generator.nextObject(Comment.class);
+
+    sportTripService.addCommentToSportTrip(sportTrip.getId(), comment);
+    Optional<SportTrip> updatedSportTrip = sportTripService.addCommentToSportTrip(sportTrip.getId(), commentSecond);
+
+    assertTrue(updatedSportTrip.isPresent());
+    assertEquals(((Collection<Comment>) updatedSportTrip.get().getComments()).size(), 2);
+    assertEquals(updatedSportTrip.get().getComments(), Lists.newArrayList(comment, commentSecond));
   }
 
   @Test

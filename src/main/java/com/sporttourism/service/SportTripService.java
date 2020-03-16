@@ -1,5 +1,7 @@
 package com.sporttourism.service;
 
+import com.google.common.collect.Lists;
+import com.sporttourism.entities.Comment;
 import com.sporttourism.entities.SportTrip;
 import com.sporttourism.payload.SportTripInput;
 import com.sporttourism.repositories.SportTripRepository;
@@ -66,6 +68,7 @@ public class SportTripService {
         .tripDuration(sportTripInput.getTripDuration())
         .maxGroupCount(sportTripInput.getMaxGroupCount())
         .cost(sportTripInput.getCost())
+        .comments(Lists.newArrayList())
         .isCompleted(Boolean.FALSE)
         .build();
 
@@ -101,5 +104,31 @@ public class SportTripService {
     LOGGER.debug("SportTripService#completeSportTrip: output: " + completedSportTrip.get().toString());
 
     return Optional.of(completedSportTrip.get());
+  }
+
+  public Optional<SportTrip> addCommentToSportTrip(String sportTripId, Comment comment) {
+    LOGGER.trace("SportTripService#addCommentToSportTrip: id=" + sportTripId);
+
+    AtomicReference<SportTrip> updatedSportTrip = new AtomicReference<>();
+
+    try {
+      sportTripRepository.findById(sportTripId)
+          .map(sportTrip -> {
+            if (sportTrip.getComments().isEmpty()) {
+              sportTrip.setComments(Lists.newArrayList(comment));
+            } else {
+              sportTrip.getComments().add(comment);
+            }
+            updatedSportTrip.set(sportTripRepository.save(sportTrip));
+            return updatedSportTrip.get();
+          }).orElseThrow(NullPointerException::new);
+    } catch (Exception e) {
+      LOGGER.error("SportTripService#addCommentToSportTrip: SportTrip with " + sportTripId + " don't exist!");
+      e.printStackTrace();
+    }
+
+    LOGGER.debug("SportTripService#addCommentToSportTrip: output: " + updatedSportTrip.get().toString());
+
+    return Optional.of(updatedSportTrip.get());
   }
 }

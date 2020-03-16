@@ -3,8 +3,8 @@ package com.sporttourism.functions;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent;
 import com.google.gson.Gson;
+import com.sporttourism.entities.Comment;
 import com.sporttourism.entities.SportTrip;
-import com.sporttourism.payload.SportTripInput;
 import com.sporttourism.service.SportTripService;
 import java.util.Map;
 import java.util.Optional;
@@ -20,7 +20,7 @@ import org.springframework.stereotype.Component;
 @Component
 @AllArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
-public class AddSportTrip implements Function<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
+public class AddCommentToSportTrip implements Function<APIGatewayProxyRequestEvent, APIGatewayProxyResponseEvent> {
 
   SportTripService sportTripService;
   Gson gson;
@@ -30,21 +30,28 @@ public class AddSportTrip implements Function<APIGatewayProxyRequestEvent, APIGa
   @Override
   public APIGatewayProxyResponseEvent apply(APIGatewayProxyRequestEvent apiGatewayProxyRequestEvent) {
 
-    SportTripInput sportTripInput;
     APIGatewayProxyResponseEvent responseEvent = new APIGatewayProxyResponseEvent();
 
     try {
-      LOGGER.info("AddSportTrip function: Request body: " + apiGatewayProxyRequestEvent.getBody());
+      Optional<Map<String, String>> pathParameters = Optional.ofNullable(apiGatewayProxyRequestEvent.getQueryStringParameters());
+      pathParameters.ifPresentOrElse(parameters -> {
 
-      sportTripInput = gson.fromJson(apiGatewayProxyRequestEvent.getBody(), SportTripInput.class);
-      LOGGER.info("AddSportTrip function: Parsed sport trip input: " + sportTripInput.toString());
-      Optional<SportTrip> addedSportTrip = sportTripService.addSportTrip(sportTripInput);
+        Optional<String> sportTripId = Optional.ofNullable(parameters.get("id"));
 
-      addedSportTrip.ifPresentOrElse(
-          sportTrip -> responseEvent.setBody(gson.toJson(sportTrip)),
-          () -> responseEvent.setBody("Incorrect sport trip input!")
-      );
-    } catch (NullPointerException e) {
+        sportTripId.ifPresent(tripId -> {
+          LOGGER.info("AddCommentToSportTrip function: pathParameter id: " + tripId);
+
+          Comment comment = gson.fromJson(apiGatewayProxyRequestEvent.getBody(), Comment.class);
+          LOGGER.info("AddCommentToSportTrip function: comment from body: " + comment.toString());
+
+          Optional<SportTrip> updatedSportTrip = sportTripService.addCommentToSportTrip(tripId, comment);
+          updatedSportTrip.ifPresent(sportTripWithNewComment -> responseEvent.setBody(gson.toJson(sportTripWithNewComment)));
+        });
+      }, () -> {
+        LOGGER.info("AddCommentToSportTrip function: pathParameter id is emply or current id doesn't exist!");
+        responseEvent.setBody("Empty sport trip id path parameter!");
+      });
+    } catch (Exception e) {
       e.printStackTrace();
     }
 
